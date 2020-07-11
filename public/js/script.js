@@ -1,27 +1,26 @@
-const drawShape = () => {
+const initThree = () => {
   start();
 };
 
 //開始
 const start = () => {
-  initThree();
+  initScene();
   initCamera();
   initLight();
   initObject();
-  // loop();
 };
 
 //Three.js初期化
 let canvas;
 let renderer; // レンダラ
 let scene; // シーン
-const initThree = () => {
+const initScene = () => {
   //シーン生成
   scene = new THREE.Scene();
 
   // 座標軸を表示
-  let axes = new THREE.AxisHelper(300);
-  scene.add(axes);
+  let axes = new THREE.AxesHelper(100);
+  // scene.add(axes);
 
   //レンダラー生成
   canvas = document.querySelector('#canvas');
@@ -36,7 +35,7 @@ const initThree = () => {
   const ratio = window.devicePixelRatio;
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.setSize(canvas.clientWidth / ratio, canvas.clientHeight / ratio);
-  renderer.setClearColor(0xff00ff, 0.5);
+  renderer.setClearColor(0xff00ff, 0.2);
 };
 
 //カメラ初期化
@@ -73,35 +72,30 @@ const initLight = () => {
 //オブジェクト初期化
 let geometry; // ジオメトリ
 let material; // マテリアル
-let cube;
 let torus;
 function initObject() {
-  //立方体を作成
-  // geometry = new THREE.BoxGeometry(100, 100, 100);
   //トーラスを作成
   geometry = new THREE.TorusGeometry(30, 10, 16, 100);
-  // マテリアルを作成
-  // material = new THREE.MeshBasicMaterial({ color: 0xff00cc });
+  //マテリアルを作成
   material = new THREE.MeshNormalMaterial();
-  // メッシュを作成
+  //メッシュを作成
   torus = new THREE.Mesh(geometry, material);
   torus.position.set(0, 0, 0);
-  // 3D空間にメッシュを追加
   scene.add(torus);
 }
 
-//ループ
-let step = 0; //ステップ数
-const loop = (points) => {
+//描画
+// let step = 0; //ステップ数
+const draw = (points) => {
+  //トーラスの位置を右目の1点にセット
   if (points && points.eyes.right) {
-    // console.log(points.eyes.right[0]);
     const x = points.eyes.right[0].x - canvas.clientWidth / 2;
     const y = -points.eyes.right[0].y + canvas.clientHeight / 2;
     torus.position.set(x, y, 0);
   }
+  //回転
   torus.rotation.x += 0.1;
   torus.rotation.y += 0.1;
   // レンダリング
   renderer.render(scene, camera);
-  // requestAnimationFrame(loop);
 };

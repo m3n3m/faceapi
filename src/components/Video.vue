@@ -25,9 +25,11 @@
 </template>
 
 <script>
-import { face } from '../util/face';
+import { face } from "../util/face";
+import { observer } from "../util/observer";
+
 export default {
-  name: 'Video',
+  name: "Video",
   data: () => {
     return {
       videoAnimationFrame: null,
@@ -37,16 +39,17 @@ export default {
     };
   },
   async mounted() {
-    const vid = document.getElementById('video');
+    const vid = document.getElementById("video");
     if (vid) {
       this.rect = vid.getBoundingClientRect();
     }
 
-    const frame = document.getElementById('videoFrame');
+    const frame = document.getElementById("videoFrame");
     if (frame) {
       this.frame_rect = frame.getBoundingClientRect();
     }
 
+    //レスポンシブ対応するときにどうするか考える
     if (this.rect && this.frame_rect) {
       const left = (this.rect.width - this.frame_rect.width) / 2;
       this.$refs.video.style.left = `-${left}px`;
@@ -55,25 +58,26 @@ export default {
     }
 
     // const rate = this.frame_rect.height / this.rect.height;
-    // console.log(this.rect, this.frame_rect, rate);
-    // console.log(this.rect.width, window.innerWidth, left);
 
-    await face.init(this.$refs.video);
-    await this.initCamera(this.$refs.video);
+    await face.init(this.$refs.video); //face-api.jsにvideo渡す
+    await this.initCamera(this.$refs.video); //カメラ起動
 
+    //ループ
     const startTime = Date.now();
     const update = () => {
       this.time = Date.now() - startTime;
       this.faceDetect();
-      // とりあえずのアニメーション
       requestAnimationFrame(update);
     };
     update();
-    this.$nextTick(() => {
-      /* eslint-disable */
-      drawShape();
+    // this.$nextTick(() => {
+    /* eslint-disable */
+    initThree(); //Three.js初期化？
+    observer.setCallback(points => {
+      draw(points);
       /* eslint-enable */
     });
+    // });
   },
   methods: {
     initCamera(video) {
@@ -81,21 +85,21 @@ export default {
         let media = navigator.mediaDevices.getUserMedia({
           audio: false,
           video: {
-            facingMode: 'user'
+            facingMode: "user"
           }
         });
         media
-          .then((stream) => {
+          .then(stream => {
             video.muted = true;
             video.playsinline = true;
             /* eslint-disable */
-            video.onloadedmetadata = (e) => {
+            video.onloadedmetadata = e => {
               resolved(true);
             };
             /* eslint-enable */
             video.srcObject = stream;
           })
-          .catch((err) => {
+          .catch(err => {
             alert(err);
             rejected(false);
           });
@@ -103,31 +107,8 @@ export default {
     },
     async faceDetect() {
       const points = await face.getFacePoints();
-      /* eslint-disable */
-      loop(points);
-      /* eslint-enable */
-      // this.draw(points);
+      observer.setValue(points);
     }
-    // draw(points) {
-    //   // console.log(">>>points", points);
-    //   const canvas = document.getElementById("canvas");
-    //   const ctx = canvas.getContext("2d");
-    //   ctx.clearRect(0, 0, this.rect.width, this.rect.height);
-    //   ctx.fillStyle = "rgb(255,0,0)";
-    //   // TODO: imageWidth, imageHeightで拡大縮小する;
-    //   ctx.fillRect(
-    //     points.eyes.right[0].x * points.landmarksImage.width + points.shift.x,
-    //     points.eyes.right[0].y * points.landmarksImage.height + points.shift.y,
-    //     10,
-    //     10
-    //   );
-    //   ctx.fillRect(
-    //     points.eyes.left[0].x * points.landmarksImage.width + points.shift.x,
-    //     points.eyes.left[0].y * points.landmarksImage.height + points.shift.y,
-    //     10,
-    //     10
-    //   );
-    // }
   }
 };
 </script>
